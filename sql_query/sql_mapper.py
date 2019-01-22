@@ -54,7 +54,16 @@ SELECT
  AND
      drag_quantum_config.`config_value` IN ('MOBILE', 'WECHAT', 'MOBILE_WECHAT')
  AND
-     drag_opportunity_distribution_log.`operator_time` >= "20190116"
+     drag_opportunity_distribution_log.`operator_time` >= "20190102"
  AND
-     drag_opportunity_distribution_log.`operator_time` < "20190117"
+     drag_opportunity_distribution_log.`operator_time` < "20190103"
+"""
+
+GET_ALIGNMENT_FOLLOW_STATUS = """
+SELECT
+opportunity_id, consultant_account, state_time
+FROM
+drag_opportunity_follow_log
+WHERE
+opportunity_id in ({0})
 """

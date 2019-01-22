@@ -50,6 +50,7 @@ class RawFilePathConfig:
 
     RAW_APPLIED_ORDER = RawFileNode("raw_data/applied_order", "applied_order")
     RAW_ALIGNMENT = RawFileNode("raw_data/alignment", "alignment")
+    RAW_ALIGNMENT_FOLLOW = RawFileNode("raw_data/alignment_follow", "alignment_follow")
     RAW_XIAONENG_DATA = RawFileNode("raw_data/xiao_neng_data", "xiao_neng_data")
     RAW_MEIQIA_DATA = RawFileNode("raw_data/mei_qia_data", "mei_qia_data")
     RAW_GREAT_BEAR_DATA = RawFileNode("raw_data/great_bear_data", "great_bear_data")
