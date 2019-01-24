@@ -82,6 +82,9 @@ class RawFilePathConfig:
     ACC_REAL_CALL_FEATURE = RawFileNode("feature_file/acc_real_call_feature", "acc_real_call_feature")
     ACC_REAL_DISTRIBUTION_FEATURE = RawFileNode("feature_file/acc_real_distribution_feature", "acc_real_distribution_feature")
     ACC_REAL_FOLLOWING_FEATURE = RawFileNode("feature_file/acc_real_following_feature", "acc_real_following_feature")
+    REAL_TIME_ACC_STATE = RawFileNode("raw_data/real_time_acc_state", "real_time_acc_state")
+    RL_DATA = RawFileNode("raw_data/rl_data", "ra_data")
+    STATES_AND_REWARDS_FILE = RawFileNode("raw_data/states_and_rewards", "states_and_rewards")
 
 R_CONFIG = RawFilePathConfig()
 

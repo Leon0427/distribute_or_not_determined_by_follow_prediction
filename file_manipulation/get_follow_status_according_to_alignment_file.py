@@ -10,8 +10,10 @@ from ..config.raw_file_path_config import RawFilePathConfig
 from ..sql_query.fetch_db_data_2_file_process import db_fetch_db_process
 from ..sql_query.sql_mapper import GET_ALIGNMENT_FOLLOW_STATUS
 from ..config.global_config import NEW_SKYNET_MYSQL_CONFIG_FILE
+from ..config.rl_config import TIME_SLOT_ON_SPAN
 from ..log.get_logger import G_LOG as LOG
 import sys
+import datetime
 from datetime import date as dt
 from ..util.my_dateutil import DateUtil
 print RawFilePathConfig.RAW_ALIGNMENT.get_dir_path()
@@ -39,8 +41,15 @@ def opp_info_yielder(opp_dist_info, info_span=500):
                 yield opp_dist_info[i: i + info_span]
             else:
                 yield opp_dist_info[i: i + info_span - 1]
-
+def translate_date_time_into_slot(date_time, time_slot):
+    weekday = DateUtil.get_weekday(date_time)
+    date = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
+    hour = date.hour
+    minute = date.minute
+    slot = time_slot[hour][minute]
+    return weekday, slot
 def get_opp_follow_status(opp_dist_info):
+    time_slot = TIME_SLOT_ON_SPAN
     opp_follow_status = []
     for opp_info_piece in opp_info_yielder(opp_dist_info):
         sql = GET_ALIGNMENT_FOLLOW_STATUS.format(",".join(["\"%s\""%x[0] for x in opp_info_piece]))
@@ -51,9 +60,10 @@ def get_opp_follow_status(opp_dist_info):
             dist_account = opp_info[1]
             dist_time = opp_info[2]
             followed, self_followed, self_followed_intime = 0,0,0
+            weekday, slot = translate_date_time_into_slot(dist_time, time_slot)
             if not dic.has_key(opp_id):
                 # first_self_follow, self_follow, follow
-                opp_follow_status.append((opp_id, self_followed_intime,self_followed,followed))
+                opp_follow_status.append((opp_id, weekday, slot, self_followed_intime,self_followed,followed))
                 continue
             follow_account = dic.get(opp_id)[0]
             follow_time = dic.get(opp_id)[1]
@@ -64,7 +74,7 @@ def get_opp_follow_status(opp_dist_info):
                 dist_date = dist_time[:10]
                 if follow_date == dist_date:
                     self_followed_intime = 1
-            opp_follow_status.append((opp_id, self_followed_intime, self_followed, followed))
+            opp_follow_status.append((opp_id, weekday, slot, self_followed_intime, self_followed, followed))
     return opp_follow_status
 
 
@@ -77,7 +87,7 @@ def get_follow_file(date):
     raw_alignment_follow_file = RawFilePathConfig.RAW_ALIGNMENT_FOLLOW.get_path(date)
     with open(raw_alignment_follow_file, "w") as fout:
         for i in opp_follow_status:
-            line = "%s\t%s\t%s\t%s\n"%i
+            line = "%s\t%s\t%s\t%s\t%s\t%s\n"%i
             fout.write(line)
 
 if __name__ == '__main__':

@@ -37,6 +37,12 @@ class DateUtil(object):
             begin_date += datetime.timedelta(days=1)
         return date_list
 
+    @staticmethod
+    def get_weekday(date):
+        date = datetime.datetime.strptime(date,"%Y-%m-%d %H:%M:%S")
+        return date.isoweekday()
+
+
 
 if __name__ == '__main__':
     print DateUtil.get_relative_delta_time_str("20170622", day=1)
