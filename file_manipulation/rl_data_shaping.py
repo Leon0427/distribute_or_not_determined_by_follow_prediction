@@ -40,14 +40,15 @@ def shape_rl_data(date):
             time_slot = int(follow_arr[2])
             day_of_weeks.append([day_of_week])
             time_slots.append([time_slot])
-            self_followed_intime, self_followed, followed = follow_arr[3:]
+            self_followed_intime, self_followed, followed = follow_arr[3:6]
+            yesterday_follow_num = follow_arr[6]
             limit_dis_follow = []
             for state in state_arr:
                 limit_dis_follow.append(float(state.split(":")[1]))
             ldf_feat = np.array(limit_dis_follow)
             reward = int(self_followed)
             # reward = int(self_followed) + int(self_followed_intime) + int(followed)
-            reward_and_state = [reward, ldf_feat]
+            reward_and_state = [reward, ldf_feat, yesterday_follow_num]
             reward_and_states.append(reward_and_state)
         dw_feats = day_of_week_enc.transform(day_of_weeks)
         ts_feats = time_slot_enc.transform(time_slots)
@@ -58,6 +59,7 @@ def shape_rl_data(date):
             dw_feat = dw_feats[i]
             ts_feat =ts_feats[i]
             ldf_feat = reward_and_states[i][1]
+            yesterday_follow_num = reward_and_states[i][2]
             line = reward
             for j in dw_feat:
                 line += "\t%s" % j
@@ -65,6 +67,7 @@ def shape_rl_data(date):
                 line += "\t%s" % j
             for j in ldf_feat:
                 line += "\t%s" % j
+            line += "\t" + yesterday_follow_num
             sr.write(line + "\n")
 
 

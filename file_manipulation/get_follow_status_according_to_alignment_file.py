@@ -9,15 +9,19 @@ from ..config.global_config import PARENT_DATA_DIR
 from ..config.raw_file_path_config import RawFilePathConfig
 from ..sql_query.fetch_db_data_2_file_process import db_fetch_db_process
 from ..sql_query.sql_mapper import GET_ALIGNMENT_FOLLOW_STATUS
+from ..sql_query.sql_mapper import GET_ACCOUNT_PAST_THREE_DAY_FOLLOWING
 from ..config.global_config import NEW_SKYNET_MYSQL_CONFIG_FILE
 from ..config.rl_config import TIME_SLOT_ON_SPAN
 from ..log.get_logger import G_LOG as LOG
 import sys
+import time
 import datetime
 from datetime import date as dt
 from ..util.my_dateutil import DateUtil
 print RawFilePathConfig.RAW_ALIGNMENT.get_dir_path()
 print RawFilePathConfig.RAW_ALIGNMENT.get_path(dt.strftime(dt.today(),"%Y%m%d"))
+
+
 def get_one_day_dist_info_of_alignment(date):
     if "-" in date:
         date.replace("-","")
@@ -33,6 +37,7 @@ def get_one_day_dist_info_of_alignment(date):
             opp_dist_info.append((opp_id, account,operator_time))
     return opp_dist_info
 
+
 def opp_info_yielder(opp_dist_info, info_span=500):
     l = len(opp_dist_info)
     for i in range(l):
@@ -41,6 +46,8 @@ def opp_info_yielder(opp_dist_info, info_span=500):
                 yield opp_dist_info[i: i + info_span]
             else:
                 yield opp_dist_info[i: i + info_span - 1]
+
+
 def translate_date_time_into_slot(date_time, time_slot):
     weekday = DateUtil.get_weekday(date_time)
     date = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
@@ -48,6 +55,30 @@ def translate_date_time_into_slot(date_time, time_slot):
     minute = date.minute
     slot = time_slot[hour][minute]
     return weekday, slot
+
+
+def get_acc_follow_ability(opp_dist_info):
+    dist_acc_follow_abilities = []
+    for opp_info_piece in opp_info_yielder(opp_dist_info):
+        accs = set([x[1] for x in opp_info_piece])
+        acc_str = ",".join(["\"%s\"" % x for x in accs])
+        date = datetime.datetime.strptime(opp_info_piece[0][2], "%Y-%m-%d %H:%M:%S").date()
+        end_date_str = date.strftime("%Y%m%d")
+        three_days_before = date - datetime.timedelta(1)
+        start_date_str = three_days_before.strftime("%Y%m%d")
+        time1 = time.time()
+        sql = GET_ACCOUNT_PAST_THREE_DAY_FOLLOWING.format(acc_str, start_date_str, end_date_str)
+        acc_follow_number = db_fetch_db_process(sql, config_file=NEW_SKYNET_MYSQL_CONFIG_FILE)
+        print time.time() - time1
+        acc_follow_number_dict = dict([(x[0],x[1]) for x in acc_follow_number])
+        for opp_info in opp_info_piece:
+            account = opp_info[1]
+            follow_number = acc_follow_number_dict.get(account) if acc_follow_number_dict.get(account) else 0
+            dist_acc_follow_abilities.append((account, follow_number))
+        print time.time() - time1
+        print "==================================="
+    return dist_acc_follow_abilities
+
 def get_opp_follow_status(opp_dist_info):
     time_slot = TIME_SLOT_ON_SPAN
     opp_follow_status = []
@@ -78,17 +109,18 @@ def get_opp_follow_status(opp_dist_info):
     return opp_follow_status
 
 
-
-
 def get_follow_file(date):
     LOG.info("generating %s follow file..." % date)
     opp_dist_info = get_one_day_dist_info_of_alignment(date)
     opp_follow_status = get_opp_follow_status(opp_dist_info)
+    dist_acc_follow_abilities = get_acc_follow_ability(opp_dist_info)
     raw_alignment_follow_file = RawFilePathConfig.RAW_ALIGNMENT_FOLLOW.get_path(date)
     with open(raw_alignment_follow_file, "w") as fout:
-        for i in opp_follow_status:
-            line = "%s\t%s\t%s\t%s\t%s\t%s\n"%i
+        for i in range(len(opp_follow_status)):
+            line = "%s\t%s\t%s\t%s\t%s\t%s"% opp_follow_status[i]
+            line += "\t%s\n" % dist_acc_follow_abilities[i][1]
             fout.write(line)
+
 
 if __name__ == '__main__':
     start_date = sys.argv[1]

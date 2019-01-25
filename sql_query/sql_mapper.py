@@ -67,3 +67,30 @@ drag_opportunity_follow_log
 WHERE
 opportunity_id in ({0})
 """
+
+GET_ACCOUNT_PAST_THREE_DAY_DISTRIBUTIONS="""
+select 
+drag_opportunity_distribution_log.account,count(distinct drag_opportunity_distribution_log.opp_id) 
+from drag_opportunity_distribution_log 
+where drag_opportunity_distribution_log.account 
+in ({0}) 
+and drag_opportunity_distribution_log.operator_time>={1}
+and drag_opportunity_distribution_log.operator_time<{2} 
+group by drag_opportunity_distribution_log.account
+"""
+
+GET_ACCOUNT_PAST_THREE_DAY_FOLLOWING="""
+select
+consultant_account, count(distinct id) as follow_number
+from
+drag_opportunity_follow_log
+where 
+consultant_account
+in ({0})
+and
+state_time >= {1}
+and 
+state_time < {2}
+group by 
+consultant_account
+"""
