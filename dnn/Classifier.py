@@ -15,9 +15,10 @@ from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score
 
 class Classifier:
-    def __init__(self, input_size, epoch=30):
+    def __init__(self, input_size, epoch=30,batch_size =1024):
         self.input_size = input_size
         self.epoch = epoch
+        self.batch_size = batch_size
         self.model = self._model()
 
     def _model(self):
@@ -38,8 +39,8 @@ class Classifier:
 
         return model
 
-    def fit(self, X, y, batch_size):
-        self.model.fit(X,y,batch_size=batch_size,epochs=self.epoch)
+    def fit(self, X, y):
+        self.model.fit(X,y,batch_size=self.batch_size,epochs=self.epoch)
 
     def predict(self, X):
         return self.model.predict(X)

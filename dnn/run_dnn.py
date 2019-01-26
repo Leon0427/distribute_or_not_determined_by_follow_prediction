@@ -5,7 +5,7 @@
 # @Site    : 
 # @File    : run_dnn.py
 # @Software: PyCharm
-from Classifier import Classifier
+from DCNClassifier import DCNClassifier
 from ..config.config_loader import load_config
 import pandas as pd
 import os
@@ -13,7 +13,7 @@ from ..log.get_logger import G_LOG as LOG
 from ..util.file_manage import FileManager
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 if __name__ == '__main__':
     config_dict = load_config("/home/liangxiao/distribute_or_not_determined_by_follow_prediction/config/exp_config.ini")
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
 
     LOG.info("reading train csv")
-    df_trains = pd.read_csv(train_data_file,sep="\t",header=None,chunksize=1024000)
+    df_trains = pd.read_csv(train_data_file,sep="\t",header=None,chunksize=102400)
     input_size = os.system("head -1 %s | awk -F\"\t\" '{print NF}' " % train_data_file)
 
     clf_created = False
@@ -45,10 +45,10 @@ if __name__ == '__main__':
     for i,df_train in enumerate(df_trains):
         print "in chunk %s:" % i
         if not clf_created:
-            clf = Classifier(df_train.shape[1] - 1, epoch=30)
+            clf = DCNClassifier(df_train.shape[1] - 1, epoch=30,batch_size=1024)
         X_train = df_train[range(1,df_train.shape[1])]
         y_train = df_train[0]
-        clf.fit(X_train,y_train, batch_size=1024)
+        clf.fit(X_train,y_train)
     LOG.info("reading test csv")
     df_test = pd.read_csv(test_data_file,sep="\t", header=None)
     X_test = df_test[range(1, df_test.shape[1])]
